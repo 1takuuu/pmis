@@ -4,11 +4,9 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+        android:required="true" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -24,7 +22,7 @@
         android:theme="@style/Theme.HelloApp"
         tools:targetApi="31">
         <provider
-            android:authorities="HelloApp.fileprovider"
+            android:authorities="HelloApp.FileProvider"
             android:name=".ComposeFileProvider"
             android:grantUriPermissions="true"
             android:exported="false">
