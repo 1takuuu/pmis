@@ -335,7 +335,6 @@ fun FakeCam() {
         imageUri = uri
     }
 
-    // Получаем информацию о конфигурации устройства (в том числе ориентация экрана)
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -351,9 +350,9 @@ fun FakeCam() {
                 modifier = Modifier
                     .let {
                         if (isLandscape) {
-                            it.size(300.dp) // Уменьшаем изображение в альбомной ориентации
+                            it.size(300.dp)
                         } else {
-                            it.size(400.dp) // Размер изображения в портретной ориентации
+                            it.size(400.dp)
                         }
                     }
                     .align(Alignment.Center)
@@ -361,11 +360,10 @@ fun FakeCam() {
             )
         }
 
-        // Кнопки внизу экрана
         Column(
             modifier = Modifier
                 .align(if(!isLandscape) Alignment.BottomCenter else Alignment.CenterStart)
-                .padding(bottom = if (isLandscape) 16.dp else 32.dp), // Меньше отступ в альбомной ориентации
+                .padding(bottom = if (isLandscape) 16.dp else 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
