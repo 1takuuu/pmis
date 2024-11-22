@@ -363,11 +363,6 @@ fun FakeCam() {
             Button(modifier = Modifier.padding(top = 16.dp),
                 onClick = {
                     currentUri = ComposeFileProvider.getImageUri(context)
-                    if (currentUri == null) {
-                        Toast.makeText(context, "Ошибка при получении URI", Toast.LENGTH_SHORT).show()
-                    } else {
-                        cameraLauncher.launch(currentUri!!)
-                    }
                     if (currentUri != null) {
                         val permissionCheckResult = ContextCompat.checkSelfPermission(
                             context,
