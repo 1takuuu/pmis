@@ -2,8 +2,11 @@ package com.example.helloapp
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +61,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.helloapp.ui.theme.HelloAppTheme
 import java.io.File
+import android.graphics.Bitmap
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -294,16 +298,23 @@ fun FakeCam() {
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var hasImage by remember { mutableStateOf(false) }
     var currentUri by remember { mutableStateOf<Uri?>(null) }
+    var bitmap by rememberSaveable { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success ->
-            hasImage = success
-            if (success) {
-                currentUri = imageUri
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            currentUri?.let { uri ->
+                bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, uri)
+                    ImageDecoder.decodeBitmap(source)
+                }
+                hasImage = true
             }
         }
-    )
+    }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
