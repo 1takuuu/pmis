@@ -335,7 +335,11 @@ fun FakeCam() {
         imageUri = uri
     }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    // Получаем информацию о конфигурации устройства (в том числе ориентация экрана)
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    Box(modifier = Modifier.fillMaxSize()) {
         if (hasImage && imageUri != null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -345,13 +349,23 @@ fun FakeCam() {
                 contentDescription = "Captured image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(400.dp)
+                    .let {
+                        if (isLandscape) {
+                            it.size(300.dp) // Уменьшаем изображение в альбомной ориентации
+                        } else {
+                            it.size(400.dp) // Размер изображения в портретной ориентации
+                        }
+                    }
                     .align(Alignment.Center)
                     .clip(RoundedCornerShape(10)),
             )
         }
+
+        // Кнопки внизу экрана
         Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp),
+            modifier = Modifier
+                .align(if(!isLandscape) Alignment.BottomCenter else Alignment.CenterStart)
+                .padding(bottom = if (isLandscape) 16.dp else 32.dp), // Меньше отступ в альбомной ориентации
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -382,6 +396,7 @@ fun FakeCam() {
         }
     }
 }
+
 
 sealed class NavRoutes(val route: String) {
     object Home : NavRoutes("home")
