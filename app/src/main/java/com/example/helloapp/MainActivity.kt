@@ -62,6 +62,7 @@ import coil.request.ImageRequest
 import com.example.helloapp.ui.theme.HelloAppTheme
 import java.io.File
 import android.graphics.Bitmap
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -300,49 +301,48 @@ fun FakeCam() {
     var currentUri by remember { mutableStateOf<Uri?>(null) }
     var bitmap by rememberSaveable { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             currentUri?.let { uri ->
-                bitmap = if (Build.VERSION.SDK_INT < 28) {
-                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                } else {
-                    val source = ImageDecoder.createSource(context.contentResolver, uri)
-                    ImageDecoder.decodeBitmap(source)
+                try {
+                    bitmap = if (Build.VERSION.SDK_INT < 28) {
+                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                    } else {
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        ImageDecoder.decodeBitmap(source)
+                    }
+                    hasImage = true
+                    imageUri = uri // Сохраняем URI для AsyncImage
+                } catch (e: Exception) {
+                    Log.e("FakeCam", "Error loading image", e)
+                    Toast.makeText(context, "Error loading image", Toast.LENGTH_SHORT).show()
                 }
-                hasImage = true
             }
         }
     }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                Toast.makeText(context, "Permission granted", Toast.LENGTH_SHORT).show()
-                currentUri?.let { cameraLauncher.launch(it) }
 
-            } else {
-                Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
-            }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Permission granted", Toast.LENGTH_SHORT).show()
+            currentUri?.let { cameraLauncher.launch(it) }
+        } else {
+            Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
         }
-    )
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri: Uri? ->
-            hasImage = uri != null
-            imageUri = uri
-        }
-    )
-    Box(modifier = Modifier) {
+    }
+
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        hasImage = uri != null
+        imageUri = uri
+    }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
         if (hasImage && imageUri != null) {
-
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUri)
                     .crossfade(true)
                     .build(),
-                contentDescription = "",
+                contentDescription = "Captured image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(400.dp)
@@ -355,12 +355,11 @@ fun FakeCam() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Button(onClick = { imagePicker.launch("image/*") }) {
+                Text(text = "Выбрать изображение")
+            }
             Button(
-                onClick = {
-                    imagePicker.launch("image/*")
-                })
-            { Text(text = "Выбрать изображение") }
-            Button(modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = 16.dp),
                 onClick = {
                     currentUri = ComposeFileProvider.getImageUri(context)
                     if (currentUri != null) {
@@ -374,17 +373,14 @@ fun FakeCam() {
                             permissionLauncher.launch(android.Manifest.permission.CAMERA)
                         }
                     } else {
-                        Toast.makeText(context, "Ошибка при получении URI", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Ошибка при получении URI", Toast.LENGTH_SHORT).show()
                     }
                 }
             ) {
                 Text(text = "Сделать снимок")
             }
         }
-
     }
-
 }
 
 sealed class NavRoutes(val route: String) {
